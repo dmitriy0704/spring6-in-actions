@@ -76,10 +76,9 @@ public interface ManagedComponent {
 Интерфейс Container, предоставляющий услуги поиска зависимостей:
 
 ```java
-    public interface Container {
-        Object getDependency{String key);
-    }
-
+public interface Container {
+        Object getDependency(String key);
+}
 ```
 
 Как только контейнер будет готов передать зависимости компоненту, он вызовет
