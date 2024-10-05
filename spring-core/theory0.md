@@ -241,11 +241,397 @@ ApplicationContext поддерживается в Spring посредством
 Первоначально определение компонентов Spring Beans
 поддерживалось через свойства или через ХМL-файл. После выпуска версии JDK 5 и
 появления в Spring, начиная с версии 2.5, поддержки аннотаций Java последние
-можно также применять при конфигурировании интерфейса ApplicationContext.
-
+можно также применять при конфигурировании интерфейса ApplicationContext.  
 Применение ХМL-файла позволяет вынести всю конфигурацию за пределы кода Java,
 тогда как аннотации дают разработчику возможность определять и видеть настройку
 внедрения зависимостей в самом коде. В каркасе Spring допускается также сочетать
 оба эти способа в одном интерфейсе ApplicationContext.
 
 #### КРАТКОЕ ОПИСАНИЕ ПРОСТОЙ КОНФИГУРАЦИИ
+
+Для конфигурирования с помощью разметки в формате XML необходимо объявить
+обязательное для приложения базовое пространство имен, предоставляемое в
+Spring. Ниже приведен простой пример ХМL-файла, в котором объявлено только
+пространство имен beans для определения компонентов Spring Beans. В последую
+щих примерах делается ссылка app-context-xml. xml на этот ХМL-файл для
+конфигурирования с помощью ХМL-разметки:
+
+```xml
+<?xrnl version="l.0" encoding="UTF-8"?>
+<beans xrnlns="http://www.springfrarnework.org/scherna/beans"
+       xrnlns:xsi="http://www.wЗ.org/2001/XMLScherna-instance"
+       xrnlns:c="http://www.springfrarnework.org/scherna/c"
+       xsi:schernaLocation=
+               "http://www.springfrarnework.org/scherna/beans
+http://www.springfrarnework.org/scherna/beans
+/spring-beans.xsd">
+</beans>
+```
+
+Чтобы воспользоваться поддержкой аннотаций в Spring при разработке приложения,
+необходимо объявить соответствующие дескрипторы в ХМL-файле конфигурации, как
+демонстрируется в приведенном ниже примере. В последующих примерах делается
+ссылка app-context-xml. xml на этот ХМL-файл для конфигурирования с помощью
+ХМL-разметки и с поддержкой аннотаций.
+
+```xml
+<?xml version="l.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.wЗ.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org
+/schema/context"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xsi:schemaLocation="http://www.springframework.org
+/schema/beans
+http://www.springframework.org/schema/beans
+/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context
+/spring-context.xsd">
+    <context:component-scan
+            base-package="com.apress.prospring5.ch3.annotation"/>
+</beans>
+```
+
+Дескриптор <context: component-scan> сообщает Spring о необходимости
+просмотра исходного кода на предмет внедряемых компонентов Spring Beans,
+снабженных аннотациями @Component, @Controller, @Repository и @Service, а
+также поддерживающих аннотации @Autowired и @Inject в указанном пакете
+(и всех его подчиненных пакетах). В дескрипторе <context: component-scan>
+можно определить целый ряд пакетов, используя в качестве разделителя запятую,
+точку с запятой или пробел. А для более точного управления в этом дескрипторе
+поддерживается включение и исключение средств просмотра компонентов.
+
+```xml
+<?xml version="l.O" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.wЗ.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org
+/schema/context"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xsi:schemaLocation="http://www.springframework.org
+/schema/beans
+http://www.springframework.org/schema/beans
+/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context
+/spring-context.xsd">
+    <context:component-scan
+            base-package="com.apress.prospring5.ch3.annotation">
+        <context:exclude-filter type="assignaЫe"
+                                expression="com.example.NotAService"/>
+    </context:component-scan>
+</beans>
+```
+
+Приведенный выше дескриптор сообщает Spring о необходимости просмотра
+указанного пакета, но с пропуском классов, для которых был назначен тип,
+заданный в выражении (им может быть класс или интерфейс). Помимо исключающего
+фильтра, можно применять и включающий фильтр. В качестве критерия фильтрации
+в атрибуте type можно указать annotation, regex, assignable, aspectj или custom
+(с собственным классом фильтра, реализующим интерфейс
+org.springframework.core.type.filter.TypeFilter). Формат выражения в атрибуте
+expression зависит от заданного типа.
+
+### Объявление компонентов Spring
+
+**_Объявление бинов с помощью XML_**
+
+Разработав класс какой-нибудь службы, чтобы использовать его в приложении,
+основанном на Spring, необходимо сообщить каркасу Spring, что компоненты Spring
+Beans пригодны для внедрения в другие компоненты, и позволить ему управлять ими.
+
+```java
+// Интерфейс средства воспроизведения
+public interface MessageRenderer {
+    void render();
+
+    void setMessageProvider(MessageProvider messageProvider);
+
+    MessageProvider getMessageProvider;
+}
+
+// Реализация средства воспроизведения
+class StandardOutMessageRenderer implements MessageRenderer {
+    private MessageProvider messageProvider;
+
+    @Override
+    void render() {
+        if (messageProvider == null) {
+            throw new RuntimeException("You must set the "
+                    + "property messageProvider of class:"
+                    + StandardOutMessageRenderer.class.getName());
+        }
+        System.out.println(messageProvider.getMessage());
+    }
+
+    @Override
+    public void setMessageProvider(MessageProvider provider) {
+        this.messageProvider = provider;
+    }
+
+    @Override
+    public MessageProvider getMessageProvider() {
+        return this.messageProvider;
+    }
+}
+
+//интерфейс поставщика услуг
+public interface MessageProvider {
+    String getMessage();
+}
+
+// Реализация поставщика услуг
+public class HelloWorldMessageProvider implements MessageProvider {
+    @Override
+    public String getMessage() {
+        return "Hello World!";
+    }
+}
+```
+
+Чтобы объявить определения компонентов Spring Beans в ХМL-файле, следует
+воспользоваться дескриптором <bean.. />,
+
+```
+<?xml version="l.O" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.wЗ.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org
+/schema/beans
+http://www.springframework.org/schema/beans
+/spring-beans.xsd">
+    <bean id="provider" class="`path/to/class/NameClass`"/>
+    <bean id="renderer"
+          class="`path/to/class/NameClass`"/>
+</beans>
+```
+
+**_Объявление бинов с помощью аннотаций_**
+
+Чтобы определить компоненты Spring Beans с помощью аннотаций, классы этих
+компонентов необходимо снабдить соответствующими стереотипными аннотациями,
+а методы и конструкторы - аннотацией @Autowired. Контейнер инверсии управления
+уведомляется, где именно следует искать компонент Spring Bean конкретного типа,
+чтобы задать его в качестве аргументов при вызове данного метода. В приведенном
+ниже фрагменте кода аннотации, применяемые для определения компонента Spring
+Bean, не определены. В качестве параметра стереотипных аннотаций можно задать
+имя результирующего компонента Spring Bean.
+
+```java
+// Простой компонент Spring Baan
+
+@Component("provider")
+public class HelloWorldMessageProvider implements MessageProvider {
+    @Override
+    public String getMessage() {
+        return "Hello World!";
+    }
+}
+
+// Сложный компонент Spring Bean
+@Service("renderer")
+class StandardOutMessageRenderer implements MessageRenderer {
+    private MessageProvider messageProvider;
+
+    @Override
+    void render() {
+        if (messageProvider == null) {
+            throw new RuntimeException("You must set the "
+                    + "property messageProvider of class:"
+                    + StandardOutMessageRenderer.class.getName());
+        }
+        System.out.println(messageProvider.getMessage());
+    }
+
+    @Override
+    @Autowired // -> Аннотация над методом внедрения зависимости
+    public void setMessageProvider(MessageProvider provider) {
+        this.messageProvider = provider;
+    }
+
+    @Override
+    public MessageProvider getMessageProvider() {
+        return this.messageProvider;
+    }
+}
+```
+
+При начальной загрузке контекста типа ApplicationContext в соответствии с
+конфигурацией, приведенной ниже из ХМL-файла app-context-annotation. xml,
+каркас Spring обнаружит определенные в ней компоненты и получит их экземпляры
+с указанными именами.
+
+```
+<?xml version="l.O" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.wЗ.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org
+/schema/context"
+       xsi:schemaLocation="http://www.springframework.org
+/schema/beans
+http://www.springframework.org/schema/beans
+/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context
+<context:component-scan
+      base-package="path/to/package_with_beans`"/ >
+</beans>
+```
+
+### Конфигурирование на языке Java
+
+Файл конфигурации app-context-xml.xml можно
+заменить конфигурационным классом, не видоизменяя классы, представляющие
+типы создаваемых компонентов Spring Beans. В таком случае конфигурационный класс
+снабжается аннотацией @Configuration и содержит методы, объявляемые с аннотацией
+@Bean и вызываемые непосредственно из контейнера инверсии управления для
+получения экземпляров компонентов Spring Beans. Имя компонента Spring Bean
+будет совпадать с именем метода, применяемого для его создания.
+
+```java
+
+@Configuration
+public class HelloWorldConfiguration {
+
+    @Bean
+    public MessageProvider provider() {
+        return new HelloWorldMessageProvider();
+    }
+
+    @Bean
+    public MessageRenderer renderer() {
+        MessageRenderer renderer = new StandardOutMessageRenderer();
+        renderer.setMessageProvider(provider());
+        return renderer;
+    }
+}
+```
+
+Для чтения конфигурации из этого класса потребуется другая реализация интерфейса
+ApplicationContext:
+
+```java
+public class HelloWorldSpringAnnotated {
+    public static void main(String... args) {
+        ApplicationContext ctx = new AnnotationConfigApplicationContext
+                (HelloWorldConfiguration.class);
+        MessageRenderer mr = ctx.getBean("renderer", MessageRenderer.class);
+        mr.render();
+    }
+}
+```
+
+Вместо экземпляра класса DefaultListableBeanFactory в данном случае получается
+экземпляр класса AnnotationConfigApplicationContext. Класс
+AnnotationConfigApplicationContext реализует интерфейс Application
+Context и способен выполнить его начальную загрузку из конфигураций,
+определенных в классе HelloWorldConfiguration.
+
+Конфигурационный класс может служить и для чтения определений компонентов
+Spring Beans, снабженных аннотациями. В данном случае в конфигурационном классе
+не потребуются методы с аннотациями @Bean, поскольку конфигурирование
+определения компонента Spring Bean является составной частью его класса.
+Но, для того чтобы найти определения компонентов Spring Beans в классах Java,
+придется активизировать просмотр этих компонентов. Это делается в
+конфигурационном классе с помощью аннотации @ComponentScanning, равнозначной
+элементу разметки `<context: component-scanning../>`. Параметры этой аннотации
+такие же, как и у равнозначного ей элемента ХМL-разметки.
+
+```java
+@ComponentScan(basePackages = {"path/to/search_beans"})
+@Configuration
+public class HelloWorldConfiguration {
+}
+```
+
+### Конфигурирование внедрения зависимостей через метод установки
+
+Для конфигурирования внедрения зависимостей через метод установки с помощью 
+разметки в формате XML необходимо ввести дескрипторы <property> в дескриптор 
+<bean> для каждого свойства, в котором должна быть внедрена зависимость. 
+Например, чтобы присвоить компонент, реализующий поставщика сообщений
+(provider), свойству messageProvider компонента, реализующего средство 
+воспроизведения (renderer), достаточно внести следующие изменения в дескриптор
+<bean> разметки этого компонента:
+
+```xml
+
+<beans>
+    <bean id="renderer"
+          class="com.apress.prospring5.ch2.decoupled
+.StandardOutMessageRenderer">
+        <property name="messageProvider" ref="provider"/>
+    </bean>
+    <bean id="provider"
+          class="com.apress.prospring5.ch2.decoupled
+.HelloWorldМessageProvider"/>
+</beans>
+```
+
+В приведенном выше коде разметки компонент provider присваивается свойству
+messageProvider.
+
+В объявление метода установки достаточно ввести аннотацию @Autowired, как 
+показано в следующем фрагменте кода:
+
+```java
+@Service("render")
+public class StandardOutMessageRenderer implements MessageRenderer {
+	private MessageProvider messageProvider;
+    // ...	
+    @Override
+    @Autowired
+	public void setMessageProvider(MessageProvider provider) {
+		System.out.println(" --> StandardOutMessageRenderer: setting the provider");
+		this.messageProvider = provider;
+	}
+}
+```
+
+При инициализации контекста типа ApplicationContext каркас Spring обнаружит 
+подобные аннотации @Autowired и внедрит зависимость по мере необходимости, 
+поскольку в ХМL-файле конфигурации объявлен дескриптор `<context:component-scan>`.
+
+### Конфигурирование внедрения зависимостей через конструктор
+
+В файле конфигурации
+Spring можно легко создать конфигурируемую реализацию интерфейса Message
+Provider, которая позволит определять сообщение внешним образом, как демон­
+стрируется в следующем фрагменте кода:
+
+```java
+
+class MessageProviderImpl implements MessageProvider {
+    private String message;
+
+    public MessageProviderImpl(String message){
+        this.message = message;
+    }
+    
+    @Override
+    public String getMessage() {
+        return message;
+    }
+}
+```
+
+Получение экземпляра класса с помощью конфигурации.
+
+```xml
+
+<beans xтlns="http://www.springfraтework.org/scheтa/beans"
+       xтlns:xsi="http://www.wЗ.org/2001/XMLScheтa-instance"
+       xsi:scheтaLocation=
+               "http://www.springfraтework.org/scheтa/beans
+http://www.springfraтework.org/scheтa/beans
+/spring-beans.xsd">
+    <bean id="тessageProvider"
+          class="coт.apress.prospring5.ch3.xтl.ConfiguraЬleMessageProvider">
+        <constructor-arg value=
+              "I hope that soтeone gets ту тessage in а bottle"/>
+    </bean>
+</beans>
+```
+
