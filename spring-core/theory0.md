@@ -420,7 +420,7 @@ Bean, не определены. В качестве параметра стер
 имя результирующего компонента Spring Bean.
 
 ```java
-// Простой компонент Spring Baan
+// Простой компонент Spring Bean
 
 @Component("provider")
 public class HelloWorldMessageProvider implements MessageProvider {
@@ -540,6 +540,7 @@ Spring Beans, снабженных аннотациями. В данном сл�
 такие же, как и у равнозначного ей элемента ХМL-разметки.
 
 ```java
+
 @ComponentScan(basePackages = {"path/to/search_beans"})
 @Configuration
 public class HelloWorldConfiguration {
@@ -548,11 +549,11 @@ public class HelloWorldConfiguration {
 
 ### Конфигурирование внедрения зависимостей через метод установки
 
-Для конфигурирования внедрения зависимостей через метод установки с помощью 
-разметки в формате XML необходимо ввести дескрипторы <property> в дескриптор 
-<bean> для каждого свойства, в котором должна быть внедрена зависимость. 
+Для конфигурирования внедрения зависимостей через метод установки с помощью
+разметки в формате XML необходимо ввести дескрипторы <property> в дескриптор
+<bean> для каждого свойства, в котором должна быть внедрена зависимость.
 Например, чтобы присвоить компонент, реализующий поставщика сообщений
-(provider), свойству messageProvider компонента, реализующего средство 
+(provider), свойству messageProvider компонента, реализующего средство
 воспроизведения (renderer), достаточно внести следующие изменения в дескриптор
 <bean> разметки этого компонента:
 
@@ -573,26 +574,29 @@ public class HelloWorldConfiguration {
 В приведенном выше коде разметки компонент provider присваивается свойству
 messageProvider.
 
-В объявление метода установки достаточно ввести аннотацию @Autowired, как 
+В объявление метода установки достаточно ввести аннотацию @Autowired, как
 показано в следующем фрагменте кода:
 
 ```java
+
 @Service("render")
 public class StandardOutMessageRenderer implements MessageRenderer {
-	private MessageProvider messageProvider;
+    private MessageProvider messageProvider;
+
     // ...	
     @Override
     @Autowired
-	public void setMessageProvider(MessageProvider provider) {
-		System.out.println(" --> StandardOutMessageRenderer: setting the provider");
-		this.messageProvider = provider;
-	}
+    public void setMessageProvider(MessageProvider provider) {
+        System.out.println(" --> StandardOutMessageRenderer: setting the provider");
+        this.messageProvider = provider;
+    }
 }
 ```
 
-При инициализации контекста типа ApplicationContext каркас Spring обнаружит 
-подобные аннотации @Autowired и внедрит зависимость по мере необходимости, 
-поскольку в ХМL-файле конфигурации объявлен дескриптор `<context:component-scan>`.
+При инициализации контекста типа ApplicationContext каркас Spring обнаружит
+подобные аннотации @Autowired и внедрит зависимость по мере необходимости,
+поскольку в ХМL-файле конфигурации объявлен дескриптор
+`<context:component-scan>`.
 
 ### Конфигурирование внедрения зависимостей через конструктор
 
@@ -602,14 +606,13 @@ Provider, которая позволит определять сообщени�
 стрируется в следующем фрагменте кода:
 
 ```java
-
 class MessageProviderImpl implements MessageProvider {
     private String message;
 
-    public MessageProviderImpl(String message){
+    public MessageProviderImpl(String message) {
         this.message = message;
     }
-    
+
     @Override
     public String getMessage() {
         return message;
@@ -630,8 +633,49 @@ http://www.springfraтework.org/scheтa/beans
     <bean id="тessageProvider"
           class="coт.apress.prospring5.ch3.xтl.ConfiguraЬleMessageProvider">
         <constructor-arg value=
-              "I hope that soтeone gets ту тessage in а bottle"/>
+                                 "I hope that soтeone gets ту тessage in а bottle"/>
     </bean>
 </beans>
+```
+
+Для внедрения зависимостей через конструктор в объявлении метода-конструктора
+целевого компонента Spring Bean применяется также аннотация `@Autowired`. Это
+другой вариант по сравнению с внедрением зависимостей через метод установки.
+
+```java
+
+@Service("provider")
+public class ConfigurableMessageProvider implements MessageProvider {
+    private String message;
+
+    @Autowired
+    public ConfigurableMessageProvider(
+            @Value("Configurable message") String message) {
+        this.message = message;
+    }
+
+    @Override
+    public String getMessage() {
+        return this.message;
+    }
+}
+```
+
+Аннотация @Value - определяется значение, внедряемое в конструктор. Подобным
+способом значения внедряются в компоненты Spring Beans.
+
+Значения, (сообщение передаваемое в @Value), предназначенные для внедрения,
+рекомендуется все же выносить за пределы прикладного кода. Чтобы вынести 
+сообщение за пределы прикладного кода, оно определяется как компонент Spring 
+Bean в файле конфигурации с аннотациями.
+
+```xml
+<beans ... >
+<context:component-scan base-package="com.apress.prospring5.ch3.annotated"/>
+<bean id="message" class="java.lang.String"
+      с: O="I hope that someone gets my message in а bottle"/>
+<bean id="message2" class="java.lang.String"
+      с: O="I know I won't Ье injected : ("/>
+   </beans>
 ```
 
