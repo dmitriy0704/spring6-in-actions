@@ -662,20 +662,153 @@ public class ConfigurableMessageProvider implements MessageProvider {
 ```
 
 Аннотация @Value - определяется значение, внедряемое в конструктор. Подобным
-способом значения внедряются в компоненты Spring Beans.
-
+способом значения внедряются в компоненты Spring Beans.  
 Значения, (сообщение передаваемое в @Value), предназначенные для внедрения,
-рекомендуется все же выносить за пределы прикладного кода. Чтобы вынести 
-сообщение за пределы прикладного кода, оно определяется как компонент Spring 
+рекомендуется все же выносить за пределы прикладного кода. Чтобы вынести
+сообщение за пределы прикладного кода, оно определяется как компонент Spring
 Bean в файле конфигурации с аннотациями.
 
 ```xml
+
 <beans ... >
 <context:component-scan base-package="com.apress.prospring5.ch3.annotated"/>
 <bean id="message" class="java.lang.String"
       с: O="I hope that someone gets my message in а bottle"/>
 <bean id="message2" class="java.lang.String"
       с: O="I know I won't Ье injected : ("/>
-   </beans>
+        </beans>
 ```
+
+Если в классе два конструктора, в конфигурации
+уточняется какой тип аргумента передавать.
+
+```java
+
+@Service("constructorConfusion")
+public class ConstructorConfusion {
+    private String someValue;
+
+    public ConstructorConfusion(String someValue) {
+        System.out.println("ConstructorConfusion(String) called");
+        this.someValue = someValue;
+    }
+
+    ublic ConstructorConfusion(int someValue) {
+        System.out.println("ConstructorConfusion(int) called");
+        this.someValue = "Number: " + Integer.toString(someValue);
+    }
+
+    public String toString() {
+        return someValue;
+    }
+
+    public static void main(String... args) {
+        GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
+        ctx.load("classpath:spring/app-context-annotation.xml");
+        ctx.refresh();
+
+        ConstructorConfusion cc = (ConstructorConfusion) ctx.getBean("constructorConfusion");
+        System.out.println(cc);
+        ctx.close();
+    }
+}
+```
+
+```xml
+
+<beans ... >
+<context:component-scan base-package="com.apress.prospring5.ch3.annotated"/>
+<bean id="message" class="java.lang.String"
+      с: O="I hope that someone gets my message in а bottle"/>
+<bean id="message2" class="java.lang.String"
+      с: O="I know I won't Ье injected : ("/>
+<construtor-arg type="int">
+<value>90</value>
+</construtor-arg>
+        </beans>
+```
+
+Или
+
+```java
+
+@Service("constructorConfusion")
+public class ConstructorConfusion {
+    private String someValue;
+
+    public ConstructorConfusion(String someValue) {
+        System.out.println("ConstructorConfusion(String) called");
+        this.someValue = someValue;
+    }
+
+    @Autowired
+    public ConstructorConfusion(@Value("90") int someValue) {
+        System.out.println("ConstructorConfusion(int) called");
+        this.someValue = "Number: " + Integer.toString(someValue);
+    }
+
+    public String toString() {
+        return someValue;
+    }
+
+    public static void main(String... args) {
+        GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
+        ctx.load("classpath:spring/app-context-annotation.xml");
+        ctx.refresh();
+
+        ConstructorConfusion cc = (ConstructorConfusion) ctx.getBean("constructorConfusion");
+        System.out.println(cc);
+        ctx.close();
+    }
+}
+```
+
+### Конфигурирование внедрения зависимостей через поле
+
+Третья разновидность внедрения зависимостей, поддерживаемая в Spring, называется
+внедрением зависимостей через поле. Как подразумевает само название, зависимость
+внедряется непосредственно в поле, и для этой цели не требуется ни конструктор,
+ни метод установки, достаточно лишь снабдить аннотацией @Autowired
+соответствующее поле, являющееся членом класса. Такое внедрение зависимостей
+оказывается вполне практичным, поскольку разработчик избавляется от
+необходимости писать код, который может не понадобиться после первоначального
+создания компонента Spring Bean, если зависимость от объекта больше не нужна за 
+его пределами.
+
+```java
+@Component
+public class Inspiration{
+    private String lyric = "I can....."
+    public Inspiration(@Value("For all....") String lyric ){
+        this.lyric = lyric;
+    }
+    
+    public String getLyric(){
+        return lyric;
+    }
+    
+    public void setLyric(String lyric){
+        this.lyric = lyric;
+    }
+}
+
+@Service("singer")
+public class Singer {
+
+
+    @Autowired
+    private Inspiration inspirationBean;
+
+    public void sing() {
+        System.out.println("..." + inpspirationBean.getSync);
+    }
+}
+
+//  <beans ... >
+//      <context:cornponeпt-scan
+//          base-package="corn.apress.prospring5.ch3.aппotated"/>
+//  </bеапs>
+```
+
+### Применение параметров внедрения зависимостей
 
