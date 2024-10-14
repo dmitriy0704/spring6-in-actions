@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: springboot-jdbc
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/musicdb?useSSL=true
+#    password: dv9899
+#    username: postgres
+#    driver-class-name: org.postgresql.Driver
