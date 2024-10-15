@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="FrameworkDetectionExcludesConfiguration">
+    <file type="web" url="file://$PROJECT_DIR$/springboot-hibernate" />
     <file type="web" url="file://$PROJECT_DIR$/springboot-jdbc" />
   </component>
   <component name="MavenProjectsManager">
