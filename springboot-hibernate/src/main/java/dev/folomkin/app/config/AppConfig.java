@@ -1,13 +1,16 @@
 package dev.folomkin.app.config;
 
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.*;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
@@ -16,26 +19,49 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.sql.Driver;
 import java.util.Properties;
+
+
 
 
 @Configuration
 @ComponentScan(basePackages = "dev.folomkin.app")
 @EnableTransactionManagement
+@PropertySource("classpath:sql/jdbc.properties")
 public class AppConfig {
+//    private String driverClassName = "org.postgresql.Driver";
+//    private String url = "jdbc:postgresql://localhost:5432/musicdb?useSSL=true";
+//    private String username = "postgres";
+//    private String password = "dv9899";
 
     private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 
+    @Value("${driverClassName}")
+    private String driverClassName;
+    @Value("${url}")
+    private String url;
+    @Value("${username}")
+    private String username;
+    @Value("${password}")
+    private String password;
+
     @Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
+    }
+
+    @Bean(destroyMethod = "close")
     public DataSource dataSource() {
         try {
-            return new EmbeddedDatabaseBuilder()
-                    .setType(EmbeddedDatabaseType.H2)
-                    .addScripts("classpath:sql/schema.sql",
-                            "classpath:sql/test-data.sql")
-                    .build();
-        } catch (Exception exception) {
-            logger.error(exception.getMessage(), exception);
+            BasicDataSource dataSource = new BasicDataSource();
+            dataSource.setDriverClassName(driverClassName);
+            dataSource.setUrl(url);
+            dataSource.setUsername(username);
+            dataSource.setPassword(password);
+            return dataSource;
+        } catch (Exception e) {
+            logger.error("DBCP DataSource bean cannot be created!", e);
             return null;
         }
     }
@@ -66,6 +92,11 @@ public class AppConfig {
     @Bean
     public PlatformTransactionManager transactionManager() throws IOException {
         return new HibernateTransactionManager(sessionFactory());
+    }
+
+    @Bean(destroyMethod = "destroy")
+    public CleanUp cleanUp() {
+        return new CleanUp(new JdbcTemplate(dataSource()));
     }
 }
 

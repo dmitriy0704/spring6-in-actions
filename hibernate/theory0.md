@@ -256,8 +256,9 @@ public class Singer implements Serializable {
 **Типы стратегии генерации id:**
 
 - **AUTO**. Это означает, что JPA провайдер решает, как генерировать уникальные
-  ID для нашей сущности. 
-- **IDENTITY** - используется встроенный в БД тип данных столбца - identity - для
+  ID для нашей сущности.
+- **IDENTITY** - используется встроенный в БД тип данных столбца - identity -
+  для
   генерации значения первичного ключа.
 - **SEQUENCE** - используется последовательность – специальный объект БД для
   генерации уникальных значений.
@@ -270,14 +271,14 @@ public class Singer implements Serializable {
 **@Version**
 
 Атрибут version снабжен аннотацией @Version. Тем самым библиотеке
-Hibernate сообщается, что в данном случае требуется применить механизм 
-оптимистичной блокировки, а для его управления - атрибут version. 
-Всякий раз, когда библиотека Hibernate обновляет запись, она сравнивает 
-версию экземпляра сущности с версией записи в базе данных. 
-Если версии совпадают, значит, данные раньше не обновлялись, и поэтому 
-Hibernate обновит данные и увеличит значение в столбце версии. Но если версии 
-отличаются, то это означает, что кто-то уже обновил запись, и тогда Hibernate 
-сгенерирует исключение типа StaleObjectStateException, которое Spring 
+Hibernate сообщается, что в данном случае требуется применить механизм
+оптимистичной блокировки, а для его управления - атрибут version.
+Всякий раз, когда библиотека Hibernate обновляет запись, она сравнивает
+версию экземпляра сущности с версией записи в базе данных.
+Если версии совпадают, значит, данные раньше не обновлялись, и поэтому
+Hibernate обновит данные и увеличит значение в столбце версии. Но если версии
+отличаются, то это означает, что кто-то уже обновил запись, и тогда Hibernate
+сгенерирует исключение типа StaleObjectStateException, которое Spring
 преобразует в исключение типа HibernateOptimisticLockingFailureException.
 В данном примере для контроля версий используется целочисленное значение. Помимо
 целых чисел, в Hibernate поддерживаются отметки времени. Тем не менее для
@@ -285,37 +286,38 @@ Hibernate обновит данные и увеличит значение в с
 поскольку в этом случае Hibernate будет всегда увеличивать номер версии на 1
 после каждого обновления. Когда же используется отметка времени, после
 каждого обновления Hibernate будет заменять значение этой отметки текущим
-показанием времени. Отметки времени менее безопасны, поскольку две параллельные 
+показанием времени. Отметки времени менее безопасны, поскольку две параллельные
 транзакции могут загрузить и обновить один и тот же элемент данных
 практически одновременно в пределах миллисекунды.
 
-
 ## Связи сущностей
+
 ### Один ко многим
 
-Пример связи "один ко многим" для сущностей Singer и Album. У одного певца 
+Пример связи "один ко многим" для сущностей Singer и Album. У одного певца
 может быть несколько альбомов.
 
 ```java
+
 @Entity
 @Table(name = "singer")
 public class Singer implements Serializable {
 
     // Поля....
-  
+
     private Set<Album> albums = new HashSet<>();
-    
-    @OneToMany(mappedBy = "singer", 
+
+    @OneToMany(mappedBy = "singer",
             cascade = CascadeType.ALL, orphanRemoval = true)
     public Set<Album> getAlbums() {
         return albums;
     }
-    
+
     public boolean addAlbum(Album album) {
         album.setSinger(this);
         return getAlbums().add(album);
     }
-    
+
     // Getters and Setters, toString()
 }
 
@@ -325,7 +327,7 @@ public class Singer implements Serializable {
 public class Album implements Serializable {
 
     // поля...
-  
+
     private Singer singer;
 
     @ManyToOne
@@ -338,17 +340,18 @@ public class Album implements Serializable {
         this.singer = singer;
     }
 
-  // Getters and Setters, toString()
+    // Getters and Setters, toString()
 }
 
 ```
 
 ### Многие ко многим
 
-Для связей "многие ко многим" требуется промежуточная таблица, через которую 
+Для связей "многие ко многим" требуется промежуточная таблица, через которую
 осуществляется соединение.
 
 ```java
+
 @Entity
 @Table(name = "singer")
 public class Singer implements Serializable {
@@ -376,17 +379,210 @@ public class Singer implements Serializable {
 
 ```
 
-Метод получения свойства instruments из класса
-Singer снабжен аннотацией @ManyToMany. В данном коде предоставляется аннотация 
-@JoinTable для указания промежуточной таблицы для соединения, которую
-должна искать библиотека Hibernate. 
+Метод получения свойства instruments из класса Singer снабжен аннотацией
+@ManyToMany. В данном коде предоставляется аннотация @JoinTable для указания
+промежуточной таблицы для соединения, которую
+должна искать библиотека Hibernate.
+
 В атрибуте "name" задается имя промежуточной
 таблицы для соединения, в атрибуте joinColumns определяется столбец с внешним
-ключом для таблицы SINGER, а в атрибуте inverseJoinColurnns указывается стол­
-бец с внешним ключом для таблицы INSTRUMENT на другой стороне устанавливае­
-мой связи. Ниже nриведен исходный код класса
-Instrurnent, где доnолнительно
-реализована другая сторона рассматриваемого здесь отношения. Данное nреобразо­
-вание связей наnоминает nриведенное ранее nреобразование для класса Singer, но
-здесь атрибуты j oinColurnns и inverseJoinColumns nоменялись местами, отра­
-жая отношение "многие ко многим".
+ключом для таблицы SINGER, а в атрибуте inverseJoinColumns указывается столбец
+с внешним ключом для таблицы INSTRUMENT на другой стороне устанавливаемой связи.
+Исходный код класса Instrument, здесь атрибуты joinColumns и inverseJoinColumns
+поменялись местами, отражая отношение "многие ко многим".
+
+```java
+
+@Entity
+@Table(name = "instrument")
+public class Instrument implements Serializable {
+
+    // ...
+    private Set<Singer> singers = new HashSet<>();
+
+    //...
+
+    @ManyToMany
+    @JoinTable(name = "singer_instrument",
+            joinColumns = @JoinColumn(name = "instrument_id"),
+            inverseJoinColumns = @JoinColumn(name = "singer_id"))
+    public Set<Singer> getSingers() {
+        return this.singers;
+    }
+
+    //...
+
+    public void setSingers(Set<Singer> singers) {
+        this.singers = singers;
+    }
+}
+
+```
+
+## Интерфейс Session
+
+При взаимодействии с базой данных в библиотеке Hibemate приходится иметь
+дело с интерфейсом Session, который получается из фабрики сеансов, реализуемой
+в компоненте SessionFactory.
+
+```java
+
+@Transactional
+@Repository("singerDao")
+public class SingerDaoImpl implements SingerDao {
+
+    private SessionFactory sessionFactory;
+
+    public SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
+    @Resource(name = "sessionFactory") // -> внедряется фабрика сеансов  
+    public void setSessionFactory(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
+
+    // ... Имплиментирумые методы
+
+}
+
+public interface SingerDao {
+    List<Singer> findAll();
+
+    List<Singer> findAllWithAlbum();
+
+    Singer findById(Long id);
+
+    Singer save(Singer contact);
+
+    void delete(Singer contact);
+}
+
+```
+
+## Выборка данных на языке запросов Hibernate
+
+Для составления запросов в Hibernate служит язык запросов HQL (Hibernate Query
+Language). При взаимодействии с базой данных библиотека Hibernate преобразует
+запросы HQL в операторы SQL.
+
+### Простой запрос с отложенной выборкой
+
+#### findAll()
+
+```java
+
+@Transactional
+@Repository("singerDao")
+public class SingerDaoImpl implements SingerDao {
+
+    private static final Logger logger = LoggerFactory.getLogger(SingerDaoImpl.class);
+    private SessionFactory sessionFactory;
+
+    @Transactional(readOnly = true)
+    public List<Singer> findAll() {
+        return sessionFactory.getCurrentSession().createQuery("from Singer s").list();
+    }
+
+    public SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
+    @Resource(name = "sessionFactory")
+    public void setSessionFactory(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
+}
+
+```
+
+Метод SessionFactory. getCurrentSession() получает реализацию интерфейса Session
+из Hibernate. Затем вызывается метод Session. createQuery(), которому передается
+оператор HQL. Оператор `from Singer s` извлекает все записи о певцах из базы
+данных. Альтернативный синтаксис этого оператора выглядит следующим образом:
+`select s from Singer s`. Аннотация`@Transactional (readOnly=true)` означает,
+что транзакция должна быть установлена как доступная только для чтения.
+Установка этого атрибута для методов, выполняющих только чтение, позволяет
+повысить производительность.
+
+### Запрос с выборкой связей
+
+Извлечь данные из связей средствами Hibernate можно так: предписать библиотеке
+Hibernate выбирать
+связанные данные только по требованию в запросе. Так, если делается запрос типа
+Criteria, можно вызвать метод Criteria.setFetchMode(), чтобы библиотека
+Hibernate немедленно произвела выборку связи. А если делается запрос типа Named
+Query, то можно воспользоваться операцией fetch, чтобы предписать библиотеке
+Hiberпate немедленно произвести выборку связи.
+
+Например, запрос для выборки "певцов и их альбомов" можно описать так:
+
+```java
+
+@Entity
+@Table(name = "singer")
+@NamedParameter({
+        @NamedQuery(name = "Singer.findAllWithAlbum",
+                query = "select distinct s from Singer s " +
+                        "left join fetch s.albums a " +
+                        "left join fetch s.instrument i")
+})
+class Singer {
+    // ,,,
+}
+
+```
+
+Сначала в приведенном выше коде определяется экземпляр
+Singer.findAllWithAlbum именованного запроса типа NamedQuery, а затем тело
+запроса на языке HQL. Обратите внимание на предложение left join fetch, в
+котором библиотеке Hibernate предписывается немедленно произвести выборку
+связи. В этом запросе применяется также оператор select distinct, иначе
+Hibernate возвратит дублированные объекты (например, два объекта со
+сведениями об одном и том же певце, если с ним связаны два альбома)
+
+```java
+
+@Transactional(readOnly = true)
+public List<Singer> findAllWithAlbum() {
+    return sessionFactory.getCurrentSession()
+            .getNamedQuery("Singer.findAllWithAlbum");
+}
+
+```
+
+### Вставка данных
+
+Единственная особенность состоит в извлечении первичного ключа,
+сгенерированного базой данных.
+В интерфейсе JDBC приходилось явно заявлять,
+что требуется извлечь сгенерированный ключ, передав экземпляр класса KeyHolder
+и получив из него ключ после выполнения оператора вставки. А в Hibernate все эти
+действия не требуются. Библиотека Hibernate извлечет сгенерированный ключ и
+заполнит объект предметной области после вставки.
+В качестве примера ниже приведена реализация метода save().
+
+```java
+  public Singer save(Singer singer) {
+    sessionFactory.getCurrentSession().saveOrUpdate(singer);
+    return singer;
+}
+```
+
+## Конфигурирование Hibernate для формирования таблиц из сущностей
+
+При разработке приложений автозапуска с применением библиотеки Hibernate
+зачастую наблюдается стремление написать сначала классы сущностей, а затем
+сформировать таблицы базы данных, исходя из их содержимого. И это делается с
+помощью свойства hibernate.hbm2ddl.auto из библиотеки Hibernate. Когда
+приложение запускается на выполнение в первый раз, в данном свойстве
+устанавливается значение create. В итоге библиотека Hibernate просмотрит все
+сущности, сформирует таблицы и (первичные, внешние, однозначные) ключи по
+отношениям, определенным с помощью аннотаций JPA и Hibernate.
+
+Если сущности сконфигурированы правильно и в базе данных находятся
+предполагаемые объекты, то в упомянутом выше свойстве следует установить
+значение update. Тем самым библиотеке Hibernate предписывается обновить
+существующую базу данных, внеся в дальнейшем любые изменения в сущности и в то
+же время сохранив исходную базу данных и любую введенную в нее информацию.
+
