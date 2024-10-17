@@ -17,5 +17,8 @@
         <module name="springboot-hibernate.main" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="hibernate-simple-app" target="21" />
+    </bytecodeTargetLevel>
   </component>
 </project>

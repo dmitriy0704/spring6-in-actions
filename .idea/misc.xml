@@ -12,7 +12,13 @@
         <option value="$PROJECT_DIR$/core/start-app/pom.xml" />
         <option value="$PROJECT_DIR$/spring-startapp/pom.xml" />
         <option value="$PROJECT_DIR$/temp/pom.xml" />
+        <option value="$PROJECT_DIR$/hibernate-simple-app/pom.xml" />
       </list>
+    </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/hibernate-simple-app/pom.xml" />
+      </set>
     </option>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="21" project-jdk-type="JavaSDK">
