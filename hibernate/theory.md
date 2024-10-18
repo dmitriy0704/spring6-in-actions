@@ -1242,6 +1242,16 @@ public class DeveloperRunner {
 
 ### Кэш первого уровня (First Level Cache)
 
+Это внутренний кэш, который находится внутри фабрики сессий. Он кэширует
+объекты, полученные в рамках одной транзакции и позволяет избежать повторной
+загрузки объектов при повторном запросе к ним.
+Пример использования первичного кэша:
+
+    Session session = sessionFactory.openSession();
+    MyEntity entity = session.get(MyEntity.class, entityId); // первичный 
+        // запрос entity = session.get(MyEntity.class, entityId); // повторный 
+        // запрос session.close();
+
 Кэш первого уровня – это кэш Сессии (Session), который является обязательным.
 Через него проходят все запросы. Перед тем, как отправить объект в БД, сессия
 хранит объект за счёт своих ресурсов.  
@@ -1251,7 +1261,54 @@ public class DeveloperRunner {
 объекты, находящиеся в кэше теряются, а далее – либо сохраняются, либо
 обновляются.
 
+Кеш первого уровня всегда привязан к объекту сессии. Hibernate всегда по
+умолчанию использует этот кеш и его нельзя отключить.
+
+
+```java
+public void Demo() {
+    SharedDoc persistedDoc = (SharedDoc) session.load(SharedDoc.class, docId);
+    System.out.println(persistedDoc.getName());
+    user1.setDoc(persistedDoc);
+
+    persistedDoc = (SharedDoc) session.load(SharedDoc.class, docId);
+    System.out.println(persistedDoc.getName());
+    user2.setDoc(persistedDoc);
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### Кэш второго уровня (Second level Cache)
+
+Это распределенный кэш, доступный нескольким сессиям в приложении. Он кэширует
+объекты, полученные при выполнении запросов к базе данных. Пример использования
+вторичного кэша:
+
+    @Entity @Cacheable @Table(name = "my_entity")
+    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    public class MyEntity implements Serializable {// ... }
 
 Кэш второго уровня является необязательным (опциональным) и изначально Hibernate
 будет искать необходимый объект в кэше первого уровня. В основном, кэширование
@@ -1259,12 +1316,19 @@ public class DeveloperRunner {
 
 ### Кэш запросов (Query Cache)
 
+Это кэш, который используется для кэширования результатов выполнения запросов
+в базу данных. Пример использования кэша запросов:
+
+    Query query = session.createQuery("from MyEntity where name = :name");
+    query.setParameter("name", "John");
+    query.setCacheable(true);
+    List<MyEntity> entities = query.list();
+
 В Hibernate предусмотрен кэш для запросов и он интегрирован с кэшем второго
 уровня. Это требует двух дополнительных физических мест для хранения
 кэшированных запросов и временных меток для обновления таблицы БД. Этот вид
 кэширования эффективен только для часто используемых запросов с одинаковыми
 параметрами.
-
 
 Developer.hbm.xml
 
@@ -1275,7 +1339,8 @@ Developer.hbm.xml
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="net.proselyte.hibernate.nativesql.Developer" table="HIBERNATE_DEVELOPERS">
+    <class name="net.proselyte.hibernate.nativesql.Developer"
+           table="HIBERNATE_DEVELOPERS">
         <meta attribute="class-description">
             This class contains developer details.
         </meta>
@@ -1330,6 +1395,7 @@ hibenrate.cfg.xml
 ehcache.xml
 
 ```xml
+
 <diskStore path="java.io.tmpdir"/>
 <defaultCache
 maxElementsInMemory="500"
@@ -1340,15 +1406,16 @@ overflowToDisk="true"
 />
 
 <cache name="Developer"
-maxElementsInMemory="200"
-eternal="true"
-timeToIdleSeconds="0"
-timeToLiveSeconds="0"
-overflowToDisk="false"
+       maxElementsInMemory="200"
+       eternal="true"
+       timeToIdleSeconds="0"
+       timeToLiveSeconds="0"
+       overflowToDisk="false"
 />
 ```
 
-Для того, что кэширование стало доступным для нашего приложения мы должны активировать его следующим образом:
+Для того, что кэширование стало доступным для нашего приложения мы должны
+активировать его следующим образом:
 [code lang=”java”]
 Session session = sessionFactory.openSession();
 Query query = session.createQuery(“FROM HIBERNATE_DEVELOPERS”);
