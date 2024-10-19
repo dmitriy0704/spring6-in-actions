@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/springboot-hibernate.main.iml" filepath="$PROJECT_DIR$/.idea/modules/springboot-hibernate.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/theory-spring.iml" filepath="$PROJECT_DIR$/.idea/theory-spring.iml" />
     </modules>
   </component>
